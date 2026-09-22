@@ -2569,7 +2569,7 @@ export function getDiscriminatedOption<
     map = new Map();
     const { options, discriminator } = internals.def;
     for (const option of options as unknown as readonly $ZodType[]) {
-      // First declaration wins, matching the order the parse path resolves a duplicate in.
+      // first declaration wins here, unlike the parse path, which throws `Duplicate discriminator value` the first time it builds its own map
       for (const v of option._zod.propValues?.[discriminator] ?? []) if (!map.has(v)) map.set(v, option);
     }
     internals.bag.optionsMap = map;
