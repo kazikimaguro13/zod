@@ -479,6 +479,23 @@ export function treeifyError<T, U>(error: $ZodError<T>, mapper = (issue: $ZodIss
   return result;
 }
 
+/** Renders a path as a dot/bracket string: `["a", "b", 0]` becomes `a.b[0]`. */
+export function toDotPath(_path: readonly (string | number | symbol | StandardSchemaV1.PathSegment)[]): string {
+  const segs: string[] = [];
+  const path: PropertyKey[] = _path.map((seg: any) => (typeof seg === "object" ? seg.key : seg));
+  for (const seg of path) {
+    if (typeof seg === "number") segs.push(`[${seg}]`);
+    else if (typeof seg === "symbol") segs.push(`[${JSON.stringify(String(seg))}]`);
+    else if (/[^\w$]/.test(seg)) segs.push(`[${JSON.stringify(seg)}]`);
+    else {
+      if (segs.length) segs.push(".");
+      segs.push(seg);
+    }
+  }
+
+  return segs.join("");
+}
+
 /** Format a ZodError as a human-readable string in the following form.
  *
  * From
@@ -505,28 +522,12 @@ export function treeifyError<T, U>(error: $ZodError<T>, mapper = (issue: $ZodIss
  * to
  *
  * ```
- * username
- *   ✖ Expected number, received string at "username
- * favoriteNumbers[0]
- *   ✖ Invalid input: expected number
+ * ✖ Invalid input: expected string
+ *   → at username
+ * ✖ Invalid input: expected number
+ *   → at favoriteNumbers[1]
  * ```
  */
-export function toDotPath(_path: readonly (string | number | symbol | StandardSchemaV1.PathSegment)[]): string {
-  const segs: string[] = [];
-  const path: PropertyKey[] = _path.map((seg: any) => (typeof seg === "object" ? seg.key : seg));
-  for (const seg of path) {
-    if (typeof seg === "number") segs.push(`[${seg}]`);
-    else if (typeof seg === "symbol") segs.push(`[${JSON.stringify(String(seg))}]`);
-    else if (/[^\w$]/.test(seg)) segs.push(`[${JSON.stringify(seg)}]`);
-    else {
-      if (segs.length) segs.push(".");
-      segs.push(seg);
-    }
-  }
-
-  return segs.join("");
-}
-
 export function prettifyError(error: StandardSchemaV1.FailureResult): string {
   const lines: string[] = [];
   // sort by path length
