@@ -834,3 +834,18 @@ test("an omittable discriminator claims undefined", () => {
     ).toThrow(/Duplicate discriminator value "undefined"/);
   }
 });
+
+// pins where a duplicate discriminator value actually lands, against the comment at packages/zod/src/v4/core/schemas.ts:2572 — "First declaration wins, matching the order the parse path resolves a duplicate in." — the parse path throws instead of resolving, and it throws out of `safeParse` too
+test("a duplicate discriminator value throws on the first parse, not at construction", () => {
+  const options = [
+    z.object({ type: z.literal("a"), first: z.string() }),
+    z.object({ type: z.literal("a"), second: z.number() }),
+  ] as const;
+
+  const union = z.discriminatedUnion("type", options as any);
+  expect(() => union.parse({ type: "a", first: "x" })).toThrow(/Duplicate discriminator value "a"/);
+  expect(() => union.safeParse({ type: "a", first: "x" })).toThrow(/Duplicate discriminator value "a"/);
+
+  // `getDiscriminatedOption` keeps its own first-wins map, so it answers where the parse path refuses to
+  expect((z.getDiscriminatedOption as any)(z.discriminatedUnion("type", options as any), "a")).toBe(options[0]);
+});
