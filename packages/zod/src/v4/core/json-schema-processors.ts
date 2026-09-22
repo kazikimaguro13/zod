@@ -310,7 +310,9 @@ export const literalProcessor: Processor<schemas.$ZodLiteral> = (schema, ctx, js
     } else if (typeof val === "bigint") {
       if (handleUnrepresentable(schema, ctx, json, params, "BigInt literals cannot be represented in JSON Schema"))
         return;
-      vals.push(Number(val));
+      // A JSON number is a double, so a bigint outside the exactly representable integers has no JSON Schema encoding at all: emitting `Number(val)` would pin a DIFFERENT value than the schema accepts. Drop it instead, the same way an `undefined` member is dropped above, so that `unrepresentable: "any"` leaves the node as `{}` rather than silently rounding.
+      const asNumber = Number(val);
+      if (Number.isSafeInteger(asNumber)) vals.push(asNumber);
     } else {
       vals.push(val);
     }

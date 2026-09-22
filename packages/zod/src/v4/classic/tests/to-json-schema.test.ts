@@ -4731,3 +4731,19 @@ test("currency code", () => {
     pattern: z.regexes.currencyCode.source,
   });
 });
+
+/**
+ * e1-014 (verified-fix oracle)
+ * source: packages/zod/src/v4/core/to-json-schema.ts:52
+ *   -- JSDoc on `JSONSchemaGeneratorParams.unrepresentable`
+ * stated_quote (verbatim): "Unrepresentable types become `{}`"
+ *   full line: ` * - `"any"` -- Unrepresentable types become `{}``
+ * A bigint literal is unrepresentable (the default `unrepresentable: "throw"` throws
+ * "BigInt literals cannot be represented in JSON Schema" for it), so by the quoted sentence
+ * `unrepresentable: "any"` must leave the node as `{}` -- no key other than `$schema`.
+ */
+test("e1-014: an unrepresentable bigint literal becomes {} under unrepresentable:'any'", () => {
+  const json = z.toJSONSchema(z.literal(9007199254740993n), { unrepresentable: "any" }) as any;
+  const { $schema: _schema, ...rest } = json;
+  expect(rest).toEqual({});
+});

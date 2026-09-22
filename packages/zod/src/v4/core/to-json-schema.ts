@@ -49,7 +49,7 @@ export interface JSONSchemaGeneratorParams {
   target?: "draft-04" | "draft-07" | "draft-2020-12" | "openapi-3.0" | ({} & string) | undefined;
   /** How to handle unrepresentable types.
    * - `"throw"` — Default. Unrepresentable types throw an error
-   * - `"any"` — Unrepresentable types become `{}`
+   * - `"any"` — Unrepresentable types become `{}` (exception: a bigint literal member that fits a JS safe integer is emitted as a number; one that does not is dropped)
    * - A function — called once per unrepresentable schema; see {@link UnrepresentableHandler}. */
   unrepresentable?: "throw" | "any" | UnrepresentableHandler<schemas.$ZodTypes>;
   /** Arbitrary custom logic that can be used to modify the generated JSON Schema. */
