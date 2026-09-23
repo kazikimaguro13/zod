@@ -498,6 +498,22 @@ test("z.toDotPath", () => {
   expect(z.core.toDotPath([])).toMatchInlineSnapshot(`""`);
 });
 
+// pins what each of the two functions actually returns, against the JSDoc at packages/zod/src/v4/core/errors.ts:485 — "Format a ZodError as a human-readable string in the following form." — which sat on `toDotPath` while describing `prettifyError`
+test("toDotPath returns a dot path; prettifyError returns the human-readable report", () => {
+  expect(z.core.toDotPath(["username"])).toBe("username");
+  expect(z.core.toDotPath(["username"])).not.toContain("✖");
+
+  const error = z
+    .object({ username: z.string(), favoriteNumbers: z.array(z.number()) })
+    .safeParse({ username: 1234, favoriteNumbers: [1234, "4567"] }).error!;
+  expect(z.prettifyError(error).split("\n")).toEqual([
+    "✖ Invalid input: expected string, received number",
+    "  → at username",
+    "✖ Invalid input: expected number, received string",
+    "  → at favoriteNumbers[1]",
+  ]);
+});
+
 test("inheritance", () => {
   const e1 = new z.ZodError([]);
   expect(e1).toBeInstanceOf(z.core.$ZodError);
