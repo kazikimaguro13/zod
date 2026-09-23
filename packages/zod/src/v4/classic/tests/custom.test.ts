@@ -38,3 +38,15 @@ test("non-continuable by default", () => {
     ]]
   `);
 });
+
+// pins the default at packages/zod/src/v4/core/api.ts:1656, `norm.abort ??= true; // default to abort:false`, whose comment said the opposite of the code: `z.custom` stops after its first failing check, `refine` keeps going
+test("z.custom aborts by default, unlike refine", () => {
+  const custom = z.custom<string>(() => false, "first").check(z.custom<string>(() => false, "second"));
+  expect(custom.safeParse("x").error!.issues.map((issue) => issue.message)).toEqual(["first"]);
+
+  const refined = z
+    .string()
+    .refine(() => false, "first")
+    .refine(() => false, "second");
+  expect(refined.safeParse("x").error!.issues.map((issue) => issue.message)).toEqual(["first", "second"]);
+});

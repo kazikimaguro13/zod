@@ -1653,7 +1653,7 @@ export function _custom<O = unknown, I = O>(
   _params: string | $ZodCustomParams | undefined
 ): schemas.$ZodCustom<O, I> {
   const norm = util.normalizeParams(_params);
-  norm.abort ??= true; // default to abort:false
+  norm.abort ??= true; // default to abort:true, unlike refine
   const schema = new Class({
     type: "custom",
     check: "custom",
